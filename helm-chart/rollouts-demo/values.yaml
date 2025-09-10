@@ -1,0 +1,44 @@
+replicaCount: 3
+
+image:
+  repository: nginx
+  tag: "1.25"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+ingress:
+  enabled: false
+
+rollout:
+  strategy:
+    blueGreen:
+      activeService: rollouts-demo-active
+      previewService: rollouts-demo-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+
+analysisTemplate:
+  enabled: true
+  successRate:
+    successCondition: result[0] >= 0.95
+    provider:
+      prometheus:
+        address: http://prometheus.istio-system:9090
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

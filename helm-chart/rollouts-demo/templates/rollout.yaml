@@ -1,0 +1,81 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "rollouts-demo.fullname" . }}
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    blueGreen:
+      activeService: {{ .Values.rollout.strategy.blueGreen.activeService }}
+      previewService: {{ .Values.rollout.strategy.blueGreen.previewService }}
+      autoPromotionEnabled: {{ .Values.rollout.strategy.blueGreen.autoPromotionEnabled }}
+      scaleDownDelaySeconds: {{ .Values.rollout.strategy.blueGreen.scaleDownDelaySeconds }}
+      {{- if .Values.rollout.strategy.blueGreen.prePromotionAnalysis }}
+      prePromotionAnalysis:
+        templates:
+        {{- range .Values.rollout.strategy.blueGreen.prePromotionAnalysis.templates }}
+        - templateName: {{ .templateName }}
+        {{- end }}
+        args:
+        {{- range .Values.rollout.strategy.blueGreen.prePromotionAnalysis.args }}
+        - name: {{ .name }}
+          value: {{ .value }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.rollout.strategy.blueGreen.postPromotionAnalysis }}
+      postPromotionAnalysis:
+        templates:
+        {{- range .Values.rollout.strategy.blueGreen.postPromotionAnalysis.templates }}
+        - templateName: {{ .templateName }}
+        {{- end }}
+        args:
+        {{- range .Values.rollout.strategy.blueGreen.postPromotionAnalysis.args }}
+        - name: {{ .name }}
+          value: {{ .value }}
+        {{- end }}
+      {{- end }}
+  selector:
+    matchLabels:
+      {{- include "rollouts-demo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "rollouts-demo.selectorLabels" . | nindent 8 }}
+        version: {{ .Values.image.tag | quote }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

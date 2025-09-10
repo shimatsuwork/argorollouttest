@@ -1,0 +1,24 @@
+{{- if .Values.analysisTemplate.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: success-rate
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  args:
+  - name: service-name
+  metrics:
+  - name: success-rate
+    successCondition: {{ .Values.analysisTemplate.successRate.successCondition }}
+    provider:
+      prometheus:
+        address: {{ .Values.analysisTemplate.successRate.provider.prometheus.address }}
+        query: |
+          sum(irate(
+            istio_requests_total{reporter="destination",destination_service_name=~"{{`{{args.service-name}}`}}",response_code!~"5.*"}[5m]
+          )) / 
+          sum(irate(
+            istio_requests_total{reporter="destination",destination_service_name=~"{{`{{args.service-name}}`}}"}[5m]
+          ))
+{{- end }}
