@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(./scripts/install-argo-rollouts.sh:*)",
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(kubectl argo rollouts:*)",
+      "Bash(./scripts/setup-dashboard.sh:*)",
+      "Bash(./scripts/deploy.sh:*)",
+      "Bash(./scripts/update-image.sh:*)",
+      "Bash(helm upgrade:*)",
+      "Bash(./scripts/test-rollback.sh:*)",
+      "Bash(kubectl get svc:*)",
+      "Bash(kubectl get pods:*)",
+      "Bash(kubectl describe:*)",
+      "Bash(kubectl delete:*)",
+      "Bash(kubectl logs:*)",
+      "Bash(curl:*)",
+      "Bash(kubectl get:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
